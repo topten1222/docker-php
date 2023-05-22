@@ -1,0 +1,50 @@
+version: '2'
+services:
+  db:
+    image: mariadb:10.1
+    build: .
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/initdb/:/docker-entrypoint-initdb.d
+      - ./mysql/data/:/var/lib/mysql/
+    environment:
+      - MYSQL_ROOT_PASSWORD=SFX2020!dgax
+      - MYSQL_DATABASE=dga
+      - MYSQL_USER=yii
+      - MYSQL_PASSWORD=SFX2020!dga
+      - TZ=Asia/Bangkok
+    command:
+      'mysqld --innodb-flush-method=fsync'
+
+  php:
+    build: ./php
+    volumes:
+      - ./www/:/var/www/html
+      - ./php/php-fpm.conf:/usr/local/etc/php-fpm.conf
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+      - ./logs/php-fpm:/var/log/php-fpm
+    expose:
+      - "9000"
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:stable-alpine
+
+    volumes:
+      - ./www/:/var/www/html
+      - ./nginx/conf/nginx.conf:/etc/nginx/conf/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./logs/nginx:/var/log/nginx
+    #expose:
+    #  - 80
+    ports:
+      - "80:80"
+
+  pma:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      VIRTUAL_HOST: 164.115.94.38
+    ports:
+      - 8008:80
